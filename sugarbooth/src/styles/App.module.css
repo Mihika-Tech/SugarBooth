@@ -1,0 +1,15 @@
+.app{
+  min-height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+.header{
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  padding: 28px 16px 8px;
+}
+.logo{ width: 64px; height: 64px; border-radius: 16px; }
+.subtitle{ color: var(--muted); margin: 0 }
+.main{ display: grid; place-items: center; padding: 18px; }
+.footer{ text-align: center; padding: 16px; color: var(--muted); }

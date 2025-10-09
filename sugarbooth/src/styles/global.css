@@ -1,0 +1,33 @@
+@font-face {
+  font-family: 'InterVar';
+  src: local('Inter'), local('Inter var');
+  font-display: swap;
+}
+:root{
+  --bg: #fff;
+  --paper: #faf7fb;
+  --ink: #271a2e;
+  --muted: #6f5b78;
+  --accent: #f19bc0;
+  --accent-2: #caa7f2;
+  --ring: #f3c9e2;
+  --radius: 16px;
+  --shadow: 0 10px 30px rgba(204, 170, 236, 0.25);
+}
+*{ box-sizing: border-box }
+html, body, #root { height: 100% }
+body{
+  margin: 0;
+  background: radial-gradient(1200px 600px at 20% -10%, #fef2ff, transparent),
+              radial-gradient(1000px 600px at 120% 10%, #ecf2ff, transparent),
+              var(--bg);
+  color: var(--ink);
+  font: 16px/1.4 system-ui, -apple-system, Segoe UI, Roboto, InterVar, sans-serif;
+}
+button, select { font: inherit; }
+.card{
+  background: var(--paper);
+  border: 1px solid #efe6f5;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
