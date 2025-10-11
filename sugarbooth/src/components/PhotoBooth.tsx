@@ -1,115 +1,199 @@
-import React, { useEffect, useRef, useState } from "react";
-import { composeStrip } from "../utils/composeStrip";
-import css from "./PhotoBooth.module.css";
+import { useState, useRef, useEffect } from "react";
+import { Camera, Download, RotateCcw } from "lucide-react";
+import { Button, Card, Select, Toolbar } from "../ui";
+import { toast, Toaster } from "sonner";
+import { CameraView } from "./photobooth/CameraView";
+import { TimerSelector } from "./photobooth/TimerSelector";
 
-type Filter = 'none' | 'soft' | 'warm' | 'bw'
+export const Photobooth = () => {
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [currentPhoto, setCurrentPhoto] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const [timerDuration, setTimerDuration] = useState(3);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
-export default function PhotoBooth() {
-    const videoRef = useRef<HTMLVideoElement>(null)
-    const stripCanvasRef = useRef<HTMLCanvasElement>(null)
-    const [ready, setReady] = useState(false)
-    const [shots, setShots] = useState<string[]>([])
-    const [countdown, setCountdown] = useState<number | null>(null)
-    const [filter, setFilter] = useState<Filter>('soft')
+  useEffect(() => {
+    startCamera();
+    return () => stream?.getTracks().forEach((t) => t.stop());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    useEffect(() => {
-        (async () => {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } })
-                if (videoRef.current) {
-                    videoRef.current.srcObject = stream
-                    await videoRef.current.play()
-                    setReady(true)
-                }
-            } catch {
-                alert('Camera access denied or unavailable.')
+  const startCamera = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user", width: 1280, height: 720 },
+        audio: false,
+      });
+      setStream(mediaStream);
+      const v = videoRef.current;
+      if (v) v.srcObject = mediaStream;
+      toast.success("Camera ready");
+    } catch {
+      toast.error("Could not access camera. Please grant permission.");
+    }
+  };
+
+  const capturePhoto = () => {
+    if (!videoRef.current || !canvasRef.current) return;
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.drawImage(video, 0, 0);
+    return canvas.toDataURL("image/png");
+  };
+
+  const startPhotoSequence = () => {
+    if (isCapturing) return;
+    setIsCapturing(true);
+    setPhotos([]);
+    setCurrentPhoto(null);
+    let count = 0;
+
+    const tick = () => {
+      setCountdown(timerDuration);
+      let c = timerDuration;
+      const iv = setInterval(() => {
+        c -= 1;
+        setCountdown(c);
+        if (c === 0) {
+          clearInterval(iv);
+          const photo = capturePhoto();
+          if (photo) {
+            setCurrentPhoto(photo);
+            setPhotos((p) => [...p, photo]);
+            count += 1;
+            if (count < 4) setTimeout(tick, 500);
+            else {
+              setIsCapturing(false);
+              setCountdown(null);
+              toast.success("Photo strip complete");
             }
-        }) ()
-        return () => {
-            const s = videoRef.current?.srcObject as MediaStream | undefined
-            s?.getTracks().forEach(t => t.stop())
+          }
         }
-    }, [])
+      }, 1000);
+    };
 
-    const cssFilter = 
-        filter === 'bw' ? 'grayscale(1) contrast(1.2)' :
-        filter === 'warm' ? 'brightness(1.06) contrast(1.02) sepia(0.15) saturate(1.15)' :
-        filter === 'soft' ? 'brightness(1.08) contrast(0.95) saturate(1.1)' : 'none'
+    tick();
+  };
 
-        const takeShot = async () => {
-            if(!videoRef.current) return
-            for (let i=3;i>=1;i--) {
-                setCountdown(i)
-                await new Promise(r => setTimeout(r, 700))
-            }
-            setCountdown(null)
+  const downloadPhotoStrip = () => {
+    if (photos.length !== 4) return;
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-            const v = videoRef.current
-            const w = 720
-            const h = 720
-            const temp = document.createElement('canvas')
-            temp.width = w
-            temp.height = h
-            const ctx = temp.getContext('2d')!
+    const img = new Image();
+    img.src = photos[0];
+    img.onload = () => {
+      const w = img.width, h = img.height;
+      canvas.width = w;
+      canvas.height = h * 4;
 
-            const vw = v.videoWidth
-            const vh = v.videoHeight
-            const side = Math.min(vw, vh)
-            const sx = (vw - side) / 2
-            const sy = (vh - side) / 2
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            if (filter === 'bw') ctx.filter = 'grayscale(1) contrast(1.2)'
-            if (filter === 'warm') ctx.filter = 'brightness(1.06) contrast(1.02) sepia(0.15) saturate(1.15)'
-            if (filter === 'soft') ctx.filter = 'brightness(1.08) contrast(0.95) saturate(1.1)'
+      photos.forEach((src, i) => {
+        const im = new Image();
+        im.src = src;
+        ctx.drawImage(im, 0, i * h, w, h);
+      });
 
-            ctx.drawImage(v, sx, sy, side, side, 0, 0, w, h)
-            const dataUrl = temp.toDataURL('image/jpeg', 0.92)
-            setShots(prev => prev.length < 4 ? [...prev, dataUrl] : prev)
-        }
+      const url = canvas.toDataURL("image/png");
+      const a = document.createElement("a");
+      a.download = `photostrip-${Date.now()}.png`;
+      a.href = url;
+      a.click();
+      toast.success("Photo strip downloaded");
+    };
+  };
 
-        const downloadStrip = async () => {
-            if (!stripCanvasRef.current || shots.length === 0) return;
-            await composeStrip(stripCanvasRef.current, shots.slice(0, 4)); // <-- await
-            const url = stripCanvasRef.current.toDataURL("image/png");
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "photostrip.png";
-            a.click();
-        };
+  const retake = () => {
+    setPhotos([]);
+    setCurrentPhoto(null);
+    setCountdown(null);
+  };
 
+  return (
+    <div className="container">
+      <Toaster richColors />
+      <div className="center" style={{ marginBottom: 16 }}>
+        <div className="stack" style={{ width: "100%" }}>
+          <div className="center">
+            <h1>Photobooth</h1>
+          </div>
+          <Toolbar>
+            {/* Example: if you later add filters */}
+            <Select defaultValue="soft" disabled className="select">
+              <option value="soft">Soft Glow</option>
+            </Select>
+            <Button onClick={startPhotoSequence} disabled={isCapturing || !stream}>
+              <Camera size={18} /> {isCapturing ? "Capturing..." : "Start Photo Strip"}
+            </Button>
+            <Button variant="ghost" onClick={retake}><RotateCcw size={18}/> Reset</Button>
+            <Button onClick={downloadPhotoStrip} disabled={photos.length !== 4}>
+              <Download size={18}/> Download Strip
+            </Button>
+          </Toolbar>
+        </div>
+      </div>
 
-        return (
-            <div className={css.wrap}>
-                <section className={'card ' + css.panel}>
-                    <div className={css.controls}>
-                        <select className={css.select} value={filter} onChange={e => setFilter(e.target.value as Filter)}>
-                            <option value="soft">Soft Glow</option>
-                            <option value="warm">Warm</option>
-                            <option value="bw">B&W</option>
-                            <option value="none">None</option>
-                        </select>
-                        <button className={css.btn} onClick={takeShot} disabled={!ready || shots.length >= 4}>
-                            {shots.length >= 4 ? '4/4 Taken' : 'Take Photo'}
-                        </button>
-                        <button className={'card ' + css.btnGhost} onClick={() => setShots([])}>Reset</button>
-                        <button className={css.btn} onClick={downloadStrip} disabled={shots.length === 0}>Download Strip</button>
-                    </div>
-                </section>
-
-                <section className={css.stage}>
-                    <div className={'card ' + css.preview}>
-                        <video ref={videoRef} className={css.video} playsInline muted style={{ filter: cssFilter }} />
-                        {countdown && <div className={css.countdown}>{countdown}</div>}
-                    </div>
-
-                    <div className={'card ' + css.stripCard}>
-                        <canvas ref={stripCanvasRef} className={css.stripCanvas} />
-                        <p className={css.hint}>Tip: Take up to 4 shots. Download the composed strip on the right.</p>
-                        <div className={css.shots}>
-                            {shots.map((s, i) => <img className={css.shot} key={i} src={s} alt={`Shot ${i}`} />)}
-                        </div>
-                    </div>
-                </section>
+      <div className="booth-grid">
+        {/* Camera Section */}
+        <div className="stack">
+          <CameraView videoRef={videoRef} countdown={countdown} isCapturing={isCapturing} />
+          <canvas ref={canvasRef} style={{ display: "none" }} />
+          {photos.length === 0 && (
+            <div className="row">
+              <TimerSelector
+                timerDuration={timerDuration}
+                setTimerDuration={setTimerDuration}
+                disabled={isCapturing}
+              />
             </div>
-        )
-}
+          )}
+          {photos.length > 0 && (
+            <div className="row">
+              <Button variant="outline" onClick={retake} className="w-full"><RotateCcw size={18}/> Retake</Button>
+              <Button onClick={downloadPhotoStrip} className="w-full" disabled={photos.length !== 4}>
+                <Download size={18}/> Download
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Preview / strip column */}
+        <div className="stack">
+          <Card className="strip-card">
+            <p className="muted">Latest photo</p>
+            <div className="aspect-4-3">
+              {currentPhoto ? (
+                <img src={currentPhoto} alt="Current capture" />
+              ) : (
+                <div className="center muted" style={{ height: "100%" }}>
+                  <div>Preview will appear here</div>
+                </div>
+              )}
+            </div>
+          </Card>
+
+          <Card className="strip-card">
+            <p><strong>Photo Strip</strong> <small>({photos.length}/4)</small></p>
+            <div className="strip-grid">
+              {[0,1,2,3].map(i => (
+                <div key={i} className="strip-slot">
+                  {photos[i] ? <img src={photos[i]} alt={`Photo ${i+1}`} style={{width:"100%",height:"100%",objectFit:"cover"}}/> : <span>{i+1}</span>}
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+};

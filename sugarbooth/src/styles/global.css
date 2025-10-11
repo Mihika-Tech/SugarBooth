@@ -1,33 +1,102 @@
-@font-face {
-  font-family: 'InterVar';
-  src: local('Inter'), local('Inter var');
-  font-display: swap;
-}
+/* ---------- Theme tokens ---------- */
 :root{
-  --bg: #fff;
-  --paper: #faf7fb;
-  --ink: #271a2e;
-  --muted: #6f5b78;
-  --accent: #f19bc0;
-  --accent-2: #caa7f2;
-  --ring: #f3c9e2;
-  --radius: 16px;
-  --shadow: 0 10px 30px rgba(204, 170, 236, 0.25);
+  --bg:#ffffff;
+  --paper:#faf7fb;
+  --ink:#271a2e;
+  --muted:#6f5b78;
+  --primary:#f19bc0;
+  --primary-2:#e788b5;
+  --ring:#f3c9e2;
+  --radius:16px;
+  --shadow:0 10px 30px rgba(204,170,236,.25);
 }
-*{ box-sizing: border-box }
-html, body, #root { height: 100% }
+
+/* ---------- Base ---------- */
+*{ box-sizing: border-box; }
+html, body, #root { height: 100%; }
 body{
-  margin: 0;
-  background: radial-gradient(1200px 600px at 20% -10%, #fef2ff, transparent),
-              radial-gradient(1000px 600px at 120% 10%, #ecf2ff, transparent),
-              var(--bg);
-  color: var(--ink);
-  font: 16px/1.4 system-ui, -apple-system, Segoe UI, Roboto, InterVar, sans-serif;
+  margin:0;
+  color:var(--ink);
+  background:
+    radial-gradient(1200px 600px at 20% -10%, #fef2ff, transparent),
+    radial-gradient(1000px 600px at 120% 10%, #ecf2ff, transparent),
+    var(--bg);
+  font: 16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Inter, sans-serif;
 }
-button, select { font: inherit; }
+h1,h2,h3{ margin:0 0 .25rem 0; font-weight: 700; }
+h1{ font-size: clamp(24px, 3.2vw, 32px); }
+p{ margin:0; }
+small{ color: var(--muted); }
+
+/* ---------- Simple layout helpers ---------- */
+.container{ max-width:1120px; margin:0 auto; padding:24px 16px; }
+.center{ display:grid; place-items:center; }
+.stack{ display:grid; gap:12px; }
+.row{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+
+/* ---------- Card / Button / Select primitives ---------- */
 .card{
-  background: var(--paper);
-  border: 1px solid #efe6f5;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  background:var(--paper);
+  border:1px solid #efe6f5;
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
 }
+.btn{
+  display:inline-flex; align-items:center; gap:.5rem;
+  border:0; border-radius:999px; padding:10px 16px;
+  font:inherit; cursor:pointer; box-shadow:var(--shadow);
+  transition: transform .04s ease;
+}
+.btn:active{ transform: translateY(1px); }
+.btn--primary{ color:#fff; background:linear-gradient(var(--primary), var(--primary-2)); }
+.btn--ghost{ background:#fff; border:1px solid #e8dff1; color:var(--ink); }
+.btn--outline{ background:#fff; border:1px solid #eadff1; color:var(--ink); }
+.btn[disabled]{ opacity:.5; cursor:not-allowed; }
+.select{
+  border:1px solid #eadff1; background:#fff; color:var(--ink);
+  border-radius:999px; padding:10px 14px; font:inherit;
+}
+
+/* ---------- Photobooth layout ---------- */
+.toolbar{
+  display:flex; align-items:center; justify-content:center; flex-wrap:wrap;
+  gap:12px; padding:10px; border-radius:20px;
+  background:#fff8; backdrop-filter: blur(6px);
+  border:1px solid #f1e8f8; box-shadow:var(--shadow);
+}
+.booth-grid{
+  display:grid; gap:24px;
+  grid-template-columns: minmax(340px, 1.1fr) minmax(320px, .9fr);
+}
+@media (max-width: 980px){
+  .booth-grid{ grid-template-columns: 1fr; }
+}
+
+/* ---------- Camera/preview ---------- */
+.preview{
+  position:relative; overflow:hidden;
+  border-radius: var(--radius); border:1px solid #f0e6f7; background:#000;
+}
+.preview video{ width:100%; height:auto; aspect-ratio: 4 / 3; object-fit: cover; display:block; }
+.countdown{
+  position:absolute; inset:0; display:grid; place-items:center;
+  font-size: 96px; color:#fff; text-shadow:0 6px 24px rgba(0,0,0,.45);
+}
+.flash{ position:absolute; inset:0; background:#fff; animation: flash .3s ease; }
+@keyframes flash{ from{opacity:1} to{opacity:0} }
+
+/* ---------- Right column ---------- */
+.strip-card{ padding:16px; display:grid; gap:12px; }
+.aspect-4-3{ width:100%; aspect-ratio: 4/3; background:#f3edf8; border-radius:12px; overflow:hidden; }
+.aspect-4-3 > img{ width:100%; height:100%; object-fit:cover; display:block; }
+.hint{ text-align:center; color: var(--muted); font-size: 14px; }
+
+.strip-grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; }
+.strip-slot{
+  width:100%; aspect-ratio: 3/4; border-radius:12px; overflow:hidden;
+  background:#fff; border:1px solid #eee3f5; display:grid; place-items:center; color: var(--muted);
+}
+
+/* ---------- Utility ---------- */
+.muted{ color: var(--muted); }
+.w-full{ width:100%; }
