@@ -100,3 +100,35 @@ small{ color: var(--muted); }
 /* ---------- Utility ---------- */
 .muted{ color: var(--muted); }
 .w-full{ width:100%; }
+
+/* ---------- Modal ---------- */
+.backdrop{
+  position:fixed; inset:0; background:rgba(0,0,0,.4);
+  display:grid; place-items:center; z-index:50;
+}
+.modal{
+  width:min(720px, 96vw);
+  background:#fff; border:1px solid #efe6f5; border-radius:16px; box-shadow:var(--shadow);
+  padding:16px; display:grid; gap:12px;
+}
+.modal .row{ justify-content: space-between; }
+
+.editor-canvas{
+  width:100%; max-height:60vh; background:#f6f2fb;
+  border:1px solid #eee3f5; border-radius:12px; display:block;
+}
+
+/* ---------- Theme swatches ---------- */
+.theme-row{ display:flex; gap:10px; flex-wrap:wrap; }
+.theme-swatch{
+  width:44px; height:44px; border-radius:10px; border:1px solid #e8dff1; cursor:pointer;
+}
+.theme-swatch[data-active="true"]{ outline:3px solid var(--ring); }
+.swatch-classic{ background:#ffffff; }
+.swatch-pink{ background:#fde7f9; }
+.swatch-kraft{ background:#f0e5d8; }
+.swatch-stars{
+  background: radial-gradient( circle at 20% 30%, #fff 0 4px, transparent 5px ) ,
+              radial-gradient( circle at 70% 60%, #fff 0 3px, transparent 4px ) ,
+              #cdb7f7;
+}
