@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Camera, Download, RotateCcw, Pencil } from "lucide-react";
 import { Button, Card, Select, Toolbar } from "../ui";
 import { toast, Toaster } from "sonner";
-import { CameraView } from "./photobooth/CameraView";
+// import { CameraView } from "./photobooth/CameraView";
 import { TimerSelector } from "./photobooth/TimerSelector";
 import { StickerEditor } from "./photobooth/StickerEditor";
 
@@ -192,7 +192,7 @@ export const Photobooth = () => {
       <Toaster richColors />
       <div className="center" style={{ marginBottom: 16 }}>
         <div className="stack" style={{ width: "100%" }}>
-          <div className="center"><h1>Kawaii Booth</h1></div>
+          <div className="center"><h1>Sugar Booth</h1></div>
 
           <Toolbar>
             {/* Filter dropdown — now working */}
