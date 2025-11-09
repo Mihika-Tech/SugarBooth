@@ -6,7 +6,7 @@ import NotFound from "./pages/NotFound";
 const App = () => (
   <>
     <Toaster richColors />
-    <BrowserRouter>
+    <BrowserRouter basename="/SugarBooth">
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="*" element={<NotFound />} />
